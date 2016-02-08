@@ -7,19 +7,42 @@ output:
 
 
 ## Loading and preprocessing the data
-
-
-
+if (!exists("rawdata")){
+    rawdata <- read.csv("activity.csv")
+}
 ## What is mean total number of steps taken per day?
-
-
+rawsteps_mean <- mean(rawdata$steps, na.rm=TRUE)
+print(paste("The mean steps per day is: ", rawsteps_mean))
+##[1] "The mean steps per day is:  37.3825995807128"
+## Total number of steps per day in the histogram
+data <- aggregate(steps ~ date, data=rawdata, sum, na.rm = TRUE)
+hist(data$steps, breaks=20, main="Total Steps per Day", xlab="Steps", ylab="Frequency")
 
 ## What is the average daily activity pattern?
-
-
+stepsdata <- aggregate(steps ~ interval, data=rawdata, mean, na.rm=TRUE)
+plot(stepsdata$interval, stepsdata$steps, type="l", main="Average Steps per Five Minute Interval",
++      xlab="Interval No.", ylab="steps")
 
 ## Imputing missing values
+missingdata <- sum(is.na(rawdata$steps))
+print(paste("There are", missingdata, "missing data points."))
+##[1] "There are 2304 missing data points.
 
-
+betterdata <- rawdata
+betterdata$steps[is.na(betterdata$steps)] <- median(rawdata$steps, na.rm=TRUE)
+betterdataday <- aggregate(steps ~ date, data=betterdata, sum, na.rm=TRUE)
+hist(betterdataday$steps, breaks=20, main="Total Steps per Day \n Adjusted Data", xlab="Steps", ylab="Frequency")
+## Considering missing values as valid.
+## The mean from better steps are as follows.
+bsteps_mean <- mean(betterdata$steps)
+print(paste("The mean is: ", bsteps_mean))
+##[1] "The mean is:  32.4799635701275"
 
 ## Are there differences in activity patterns between weekdays and weekends?
+ betterdata$date <- as.Date(betterdata$date)
+ betterdata$dayname <- weekdays(betterdata$date)
+ betterdata$weekend <- as.factor(ifelse(betterdata$dayname == "Saturday" | betterdata$dayname == "Sunday", "weekend", "weekday"))
+ library(lattice)
+ plotdata <- aggregate(steps ~ interval + weekend, betterdata, mean)
+ xyplot(steps ~ interval | factor(weekend), data=plotdata, aspect=1/3, type="l")
+##Comparison between weekday and weekend activities.
